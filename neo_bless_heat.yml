@@ -1,0 +1,189 @@
+heat_template_version: 2016-10-14
+
+description: Template create bless bundle.
+
+#####################################
+# PARAMETERS
+#####################################
+parameters:
+  image:
+    type: string
+    label: Image name or ID
+    description: Image to be used for server. Please use an Centos based image.
+    default: "Image-Plesk-Bundle-1.0"
+  flavor:
+    type: string
+    label: Flavor
+    description: Type of instance (flavor) to be used on the compute instance.
+  private_network:
+    type: string
+    label: Private Network
+    description: Setup Private network
+  public_network:
+    type: string
+    label: Public network name or ID
+    description: Public network to attach server to.
+    default: Public_Network
+  username:
+    type: string
+    label: Set Username
+    description: Set username to virtual machine and bless bundle.
+  email:
+    type: string
+    label: Set Email bless
+    description: Set email to bless bundle.
+  password:
+    type: string
+    label: Set password bless
+    description: Set password to bless bundle.
+  activation_key:
+    type: string
+    label: Set bless activation key
+    description: Set activation key to bless bundle.
+  neo_type:
+    type: json
+    label: neo type metadata
+    description: Set neo type metadata
+    default: {"metadata": {"neo_type": "PLSK"}}
+  floating_desc:
+    type: string
+    label: neo description for floating ip
+    description: neo description for floating ip
+    default: PLSK
+  package:
+    type: string
+    label: bless package
+    description: bless package
+    default: wordpress
+    constraints:
+      - allowed_values: [ wordpress, business ]
+        description: Value must be one of wordpress, business.
+
+resources:
+  secgroup:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name:
+        list_join: [-, [{ get_param: 'OS::stack_name' },neo,secgroup]]
+      rules:
+        - protocol: icmp
+        - protocol: udp
+        - protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+        - protocol: tcp
+          port_range_min: 25
+          port_range_max: 25
+        - protocol: tcp
+          port_range_min: 110
+          port_range_max: 110
+        - protocol: tcp
+          port_range_min: 143
+          port_range_max: 143
+        - protocol: tcp
+          port_range_min: 443
+          port_range_max: 443
+        - protocol: tcp
+          port_range_min: 465
+          port_range_max: 465
+        - protocol: tcp
+          port_range_min: 993
+          port_range_max: 993
+        - protocol: tcp
+          port_range_min: 8443
+          port_range_max: 8443
+        - protocol: tcp
+          port_range_min: 8447
+          port_range_max: 8447
+        - protocol: tcp
+          port_range_min: 8880
+          port_range_max: 8880
+        - protocol: tcp
+          port_range_min: 80
+          port_range_max: 80
+        - remote_mode: remote_group_id
+
+  define_port:
+    type: OS::Neutron::Port
+    properties:
+      admin_state_up: true
+      network_id: { get_param: private_network }
+      security_groups:
+        - {get_resource: secgroup}
+
+  floating:
+      type: OS::Neutron::FloatingIP
+      properties:
+        value_specs: {"description":{get_param: floating_desc}}
+        floating_network: {get_param: public_network}
+        port_id: {get_resource: define_port}
+
+  cloud_config:
+    type: OS::Heat::MultipartMime
+    properties:
+      parts:
+        - config:
+            str_replace:
+              params:
+                $USERNAME : { get_param: username }
+                $PASSWORD : { get_param: password }
+              template: |
+                #cloud-config
+                system_info:
+                  default_user:
+                    name: $USERNAME
+                    lock_passwd: true
+                    gecos: Instances Interactive User
+                    groups: [wheel, adm, systemd-journal]
+                    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+                    shell: /bin/bash
+                chpasswd:
+                  list: |
+                    $USERNAME:$PASSWORD
+                  expire: False
+                ssh_pwauth: True
+        - config:
+            str_replace:
+              template: |
+                #!/bin/bash
+                cat <<'EOF' > /tmp/bless.yml
+                #YML HERE
+
+                EOF
+                bless generate -f /tmp/bless.yml
+              params:
+                $email: {get_param: email}
+                $passwd: {get_param: password}
+                $username: {get_param: username}
+                $activation_key: {get_param: activation_key}
+                $package: {get_param: package}
+
+  create_vm:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: 'OS::stack_name' }
+      image: {get_param: image}
+      metadata: { get_param: [ neo_type, metadata ] }
+      flavor: {get_param: flavor}
+      networks:
+        - port: {get_resource: define_port}
+      user_data_format: RAW
+      user_data: {get_resource: cloud_config}
+
+outputs:
+  user:
+    description: User Name
+    value: {get_param: username}
+  email:
+    description: Email
+    value: {get_param: email}
+  controller:
+    description: Controller IP
+    value: {get_attr: [floating,floating_ip_address]}
+  sec_group:
+    description: Security Group
+    value:
+      list_join: [-, [{ get_param: 'OS::stack_name' },neo,secgroup]]
+  vm_id:
+    description: VM ID
+    value: {get_resource: create_vm}
