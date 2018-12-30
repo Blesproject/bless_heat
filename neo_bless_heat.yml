@@ -10,7 +10,6 @@ parameters:
     type: string
     label: Image name or ID
     description: Image to be used for server. Please use an Centos based image.
-    default: "Image-Plesk-Bundle-1.0"
   flavor:
     type: string
     label: Flavor
@@ -27,37 +26,21 @@ parameters:
   username:
     type: string
     label: Set Username
-    description: Set username to virtual machine and bless bundle.
-  email:
+    description: Set username to virtual machine and bless bundle.W
+  app_name:
     type: string
-    label: Set Email bless
-    description: Set email to bless bundle.
-  password:
-    type: string
-    label: Set password bless
-    description: Set password to bless bundle.
-  activation_key:
-    type: string
-    label: Set bless activation key
-    description: Set activation key to bless bundle.
+    label: Set App_name
+    description: Set app_name to virtual machine and bless bundle.W
   neo_type:
     type: json
     label: neo type metadata
     description: Set neo type metadata
-    default: {"metadata": {"neo_type": "PLSK"}}
+    default: {"metadata": {"neo_type": "BLESS"}}
   floating_desc:
     type: string
     label: neo description for floating ip
     description: neo description for floating ip
-    default: PLSK
-  package:
-    type: string
-    label: bless package
-    description: bless package
-    default: wordpress
-    constraints:
-      - allowed_values: [ wordpress, business ]
-        description: Value must be one of wordpress, business.
+    default: BLESS
 
 resources:
   secgroup:
@@ -72,32 +55,11 @@ resources:
           port_range_min: 22
           port_range_max: 22
         - protocol: tcp
-          port_range_min: 25
-          port_range_max: 25
-        - protocol: tcp
-          port_range_min: 110
-          port_range_max: 110
-        - protocol: tcp
-          port_range_min: 143
-          port_range_max: 143
-        - protocol: tcp
           port_range_min: 443
           port_range_max: 443
         - protocol: tcp
-          port_range_min: 465
-          port_range_max: 465
-        - protocol: tcp
-          port_range_min: 993
-          port_range_max: 993
-        - protocol: tcp
-          port_range_min: 8443
-          port_range_max: 8443
-        - protocol: tcp
-          port_range_min: 8447
-          port_range_max: 8447
-        - protocol: tcp
-          port_range_min: 8880
-          port_range_max: 8880
+          port_range_min: 6969
+          port_range_max: 6969
         - protocol: tcp
           port_range_min: 80
           port_range_max: 80
@@ -126,7 +88,6 @@ resources:
             str_replace:
               params:
                 $USERNAME : { get_param: username }
-                $PASSWORD : { get_param: password }
               template: |
                 #cloud-config
                 system_info:
@@ -145,18 +106,12 @@ resources:
         - config:
             str_replace:
               template: |
-                #!/bin/bash
-                cat <<'EOF' > /tmp/bless.yml
-                #YML HERE
-
-                EOF
-                bless generate -f /tmp/bless.yml
+                bless generate -f $bless_config
+                cd ~/BLESS/$app_name/
+                sh production.sh
               params:
-                $email: {get_param: email}
-                $passwd: {get_param: password}
-                $username: {get_param: username}
-                $activation_key: {get_param: activation_key}
-                $package: {get_param: package}
+                $bless_config: {get_file: /home/iank/BIZNET/BACKENDLESS/GENERATOR/example/bless.yml}
+                $app_name: {get_param: app_name}
 
   create_vm:
     type: OS::Nova::Server
@@ -174,9 +129,6 @@ outputs:
   user:
     description: User Name
     value: {get_param: username}
-  email:
-    description: Email
-    value: {get_param: email}
   controller:
     description: Controller IP
     value: {get_attr: [floating,floating_ip_address]}
