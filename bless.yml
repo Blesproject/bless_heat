@@ -6,6 +6,10 @@ description: Template create bless bundle.
 # PARAMETERS
 #####################################
 parameters:
+  key_name:
+    type: string
+    label: Key Name
+    description: Key name 
   image:
     type: string
     label: Image name or ID
@@ -124,6 +128,7 @@ resources:
         - port: {get_resource: define_port}
       user_data_format: RAW
       user_data: {get_resource: cloud_config}
+      key_name: {get_param: key_name}
 
 outputs:
   user:
@@ -139,3 +144,6 @@ outputs:
   vm_id:
     description: VM ID
     value: {get_resource: create_vm}
+  key_name:
+    description: Key Name
+    value: {get_param: key_name}
