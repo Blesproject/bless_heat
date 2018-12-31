@@ -30,11 +30,19 @@ parameters:
   username:
     type: string
     label: Set Username
-    description: Set username to virtual machine and bless bundle.W
+    description: Set username to virtual machine and bless bundle
   app_name:
     type: string
     label: Set App_name
-    description: Set app_name to virtual machine and bless bundle.W
+    description: Set app_name to virtual machine and bless bundle
+  app_port:
+    type: string
+    label: Set App_name
+    description: Set app_name to virtual machine and bless bundle
+  path_object:
+    type: string
+    label: Set bless object file path
+    description: Set object to virtual machine and bless bundle
   neo_type:
     type: json
     label: neo type metadata
@@ -62,8 +70,8 @@ resources:
           port_range_min: 443
           port_range_max: 443
         - protocol: tcp
-          port_range_min: 6969
-          port_range_max: 6969
+          port_range_min: {get_param: app_port}
+          port_range_max: {get_param: app_port}
         - protocol: tcp
           port_range_min: 80
           port_range_max: 80
@@ -114,7 +122,7 @@ resources:
                 cd ~/BLESS/$app_name/
                 sh production.sh
               params:
-                $bless_config: {get_file: /home/iank/BIZNET/BACKENDLESS/GENERATOR/example/bless.yml}
+                $bless_config: {get_file: {get_param: path_object}}
                 $app_name: {get_param: app_name}
 
   create_vm:
