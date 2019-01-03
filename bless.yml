@@ -39,7 +39,7 @@ parameters:
     type: string
     label: Set App_name
     description: Set app_name to virtual machine and bless bundle
-  path_object:
+  project_id:
     type: string
     label: Set bless object file path
     description: Set object to virtual machine and bless bundle
@@ -118,11 +118,12 @@ resources:
         - config:
             str_replace:
               template: |
-                bless generate -f $bless_config
+                wget http://127.0.0.1:6968/static/bless/$project_id/bless.yml
+                bless generate -f bless.yml
                 cd ~/BLESS/$app_name/
                 sh production.sh
               params:
-                $bless_config: {get_file: {get_param: path_object}}
+                $project_id: {get_file: {get_param: project_id}}
                 $app_name: {get_param: app_name}
 
   create_vm:
