@@ -118,7 +118,7 @@ resources:
         - config:
             str_replace:
               template: |
-                wget http://127.0.0.1:6968/static/bless/$project_id/bless.yml
+                wget http://103.93.53.46:6968/static/bless/$project_id/bless.yml
                 bless generate -f bless.yml
                 cd ~/BLESS/$app_name/
                 sh production.sh
