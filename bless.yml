@@ -123,7 +123,7 @@ resources:
                 cd ~/BLESS/$app_name/
                 sh production.sh
               params:
-                $project_id: {get_file: {get_param: project_id}}
+                $project_id: {get_param: project_id}
                 $app_name: {get_param: app_name}
 
   create_vm:
