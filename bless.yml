@@ -126,13 +126,13 @@ resources:
                 wget http://103.93.53.46:6968/static/bless/$project/bless.yml
                 EOF
 
-                echo 'bash deploy.sh "$project_id"'
+                bash /tmp/deploy.sh "$project_id"
                 sudo pip3 install -r https://raw.githubusercontent.com/Blesproject/bless_gen/master/requirements.txt
                 bless generate -f bless.yml
                 cd ~/BLESS/$app_name/
                 sudo pip3 install -r requirements.txt
                 sudo chmod +x production.sh
-                echo bash 'production.sh'
+                bash production.sh
               params:
                 $project_id: {get_param: project_id}
                 $app_name: {get_param: app_name}
