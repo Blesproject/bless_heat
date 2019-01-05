@@ -121,7 +121,8 @@ resources:
                 wget http://103.93.53.46:6968/static/bless/$project_id/bless.yml
                 bless generate -f bless.yml
                 cd ~/BLESS/$app_name/
-                sh production.sh
+                chmod +x production.sh
+                bash production.sh
               params:
                 $project_id: {get_param: project_id}
                 $app_name: {get_param: app_name}
