@@ -119,12 +119,19 @@ resources:
             str_replace:
               template: |
                 #!/bin/bash
-                wget http://103.93.53.46:6968/static/bless/"$project_id"/bless.yml
+                echo 'wget http://103.93.53.46:6968/static/bless/"$project_id"/bless.yml > /tmp/deploy.yml'
+                wget http://103.93.53.46:6968/static/bless/"$project_id"/bless.yml > /tmp/deploy.yml
+
                 sudo pip3 install -r https://raw.githubusercontent.com/Blesproject/bless_gen/master/requirements.txt
-                bless generate -f bless.yml
+                bless generate -f /tmp/deploy.yml
+
+                
+                echo 'cd ~/BLESS/"$app_name"/''
                 cd ~/BLESS/"$app_name"/
+
                 sudo pip3 install -r requirements.txt
                 sudo chmod +x production.sh
+
                 bash production.sh
               params:
                 $project_id: {get_param: project_id}
