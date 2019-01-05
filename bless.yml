@@ -117,8 +117,13 @@ resources:
                 ssh_pwauth: True
         - config:
             str_replace:
-              template: |
-                wget http://103.93.53.46:6968/static/bless/$project_id/bless.yml
+              template:
+                #!/bin/bash
+                cat <<'EOF' > /tmp/deploy.sh
+                project = $1
+                wget http://103.93.53.46:6968/static/bless/$project/bless.yml
+                EOF
+                echo 'bash deploy.sh "$project_id"'
                 bless generate -f bless.yml
                 cd ~/BLESS/$app_name/
                 chmod +x production.sh
