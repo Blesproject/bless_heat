@@ -119,23 +119,24 @@ resources:
             str_replace:
               template: |
                 #!/bin/bash
-                echo 'wget http://103.93.53.46:6968/static/bless/"$project_id"/bless.yml > /tmp/deploy.yml'
-                wget http://103.93.53.46:6968/static/bless/"$project_id"/bless.yml > /tmp/deploy.yml
+                echo '/home/"$username"/BLESS/"$app_name"/'
+                cd /home/"$username"/
+                wget http://103.93.53.46:6968/static/bless/"$project_id"/bless.yml
 
-                sudo pip3 install -r https://raw.githubusercontent.com/Blesproject/bless_gen/master/requirements.txt
-                bless generate -f /tmp/deploy.yml
-
+                wget https://raw.githubusercontent.com/Blesproject/bless_gen/master/requirements.txt
                 
-                echo 'cd ~/BLESS/"$app_name"/''
-                cd ~/BLESS/"$app_name"/
-
                 sudo pip3 install -r requirements.txt
-                sudo chmod +x production.sh
+                bless generate -f bless.yml
 
-                bash production.sh
+                cd ~/BLESS/"$app_name"/
+                sudo pip3 install --user -r requirements.txt
+                sudo chmod +x ~/BLESS/"$app_name"/production.sh
+
+                bash ~/BLESS/"$app_name"/production.sh
               params:
                 $project_id: {get_param: project_id}
                 $app_name: {get_param: app_name}
+                $username: {get_param: username}
 
   create_vm:
     type: OS::Nova::Server
