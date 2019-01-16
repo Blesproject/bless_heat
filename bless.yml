@@ -39,10 +39,6 @@ parameters:
     type: string
     label: Set App_name
     description: Set app_name to virtual machine and bless bundle
-  project_id:
-    type: string
-    label: Set bless object file path
-    description: Set object to virtual machine and bless bundle
   neo_type:
     type: json
     label: neo type metadata
@@ -110,33 +106,6 @@ resources:
                     groups: [wheel, adm, systemd-journal]
                     sudo: ["ALL=(ALL) NOPASSWD:ALL"]
                     shell: /bin/bash
-                chpasswd:
-                  list: |
-                    $USERNAME:$PASSWORD
-                  expire: False
-                ssh_pwauth: True
-        - config:
-            str_replace:
-              template: |
-                #!/bin/bash
-                echo '/home/"$username"/BLESS/"$app_name"/'
-                cd /home/"$username"/
-                wget http://103.93.53.46:6968/static/bless/"$project_id"/bless.yml
-
-                wget https://raw.githubusercontent.com/Blesproject/bless_gen/master/requirements.txt
-                
-                sudo pip3 install -r requirements.txt
-                bless generate -f bless.yml
-
-                cd ~/BLESS/"$app_name"/
-                sudo pip3 install --user -r requirements.txt
-                sudo chmod +x ~/BLESS/"$app_name"/production.sh
-
-                bash ~/BLESS/"$app_name"/production.sh
-              params:
-                $project_id: {get_param: project_id}
-                $app_name: {get_param: app_name}
-                $username: {get_param: username}
 
   create_vm:
     type: OS::Nova::Server
